@@ -34,60 +34,20 @@ import com.google.api.services.bigquery.Bigquery;
 import com.google.api.services.bigquery.BigqueryScopes;
 
 public class BQConnection implements Connection {
-	
-	private final Pattern urlPattern = Pattern.compile("jdbc:bq:(?://([a-zA-Z0-9_-]+)(?:/([a-zA-Z0-9_-]+))?)?");
-	
-	private String clientEmail;
-	private String privateKeyFile;
-	private HttpTransport httpTransport;
-	private JsonFactory jsonFactory;
+
+	private static final Pattern URL_PATTERN = Pattern.compile("jdbc:bq:(?://([a-zA-Z0-9_-]+)(?:/([a-zA-Z0-9_-]+))?)?");
+
 	private Bigquery bq;
 	private String projectId;
 	private String datasetId;
-	private boolean isClosed = true;
+	private boolean isClosed;
 
-	public Bigquery getBq() {
-		return bq;
-	}
-
-	public void setBq(Bigquery bq) {
-		this.bq = bq;
-	}
-
-	public String getProjectId() {
-		return projectId;
-	}
-
-	public void setProjectId(String projectId) {
-		this.projectId = projectId;
-	}
-
-	public String getDatasetId() {
-		return datasetId;
-	}
-
-	public void setDatasetId(String datasetId) {
-		this.datasetId = datasetId;
-	}
-
-	public BQConnection(String url, Properties info) throws BQSQLException {
-		clientEmail = info.getProperty("user");
-		privateKeyFile = info.getProperty("password");
-		
-		Matcher matcher = urlPattern.matcher(url);
-		if (matcher.find()) {
-			if (matcher.group(1) != null) projectId = matcher.group(1);
-			if (matcher.group(2) != null) datasetId = matcher.group(2);
-		}
-
-		connect(url, info);
-		isClosed = false;
-	}
-	
-	private void connect(String url, Properties info) throws BQSQLException {
+	public BQConnection(String url, Properties info) throws SQLException {
 		try {
-			if (httpTransport == null) httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-	    	if (jsonFactory == null) jsonFactory = JacksonFactory.getDefaultInstance();
+			String clientEmail = info.getProperty("user");
+			String privateKeyFile = info.getProperty("password");
+			HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+			JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
 			GoogleCredential credential = new GoogleCredential.Builder()
 				.setTransport(httpTransport)
 				.setJsonFactory(jsonFactory)
@@ -98,81 +58,72 @@ public class BQConnection implements Connection {
 			bq = new Bigquery.Builder(httpTransport, jsonFactory, credential)
 				.setApplicationName(getClass().getSimpleName())
 				.build();
+			Matcher matcher = URL_PATTERN.matcher(url);
+			if (matcher.find()) {
+				if (matcher.group(1) != null) projectId = matcher.group(1);
+				if (matcher.group(2) != null) datasetId = matcher.group(2);
+			}
+			isClosed = true;
 		} catch (GeneralSecurityException e) {
-	    	throw new BQSQLException(e);
+			throw new SQLException(e);
 		} catch (IOException e) {
-	    	throw new BQSQLException(e);
+			throw new SQLException(e);
 		}
 	}
 
 	@Override
 	public <T> T unwrap(Class<T> iface) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean isWrapperFor(Class<?> iface) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Statement createStatement() throws SQLException {
-		if (isClosed) {
-			throw new BQSQLException("The Connection is Closed");
-		}
-		return new BQStatement(this);
+		return new BQStatement(bq, projectId, datasetId);
 	}
 
 	@Override
 	public PreparedStatement prepareStatement(String sql) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new BQPreparedStatement(bq, projectId, datasetId, sql);
 	}
 
 	@Override
 	public CallableStatement prepareCall(String sql) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public String nativeSQL(String sql) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void setAutoCommit(boolean autoCommit) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		// nop
 	}
 
 	@Override
 	public boolean getAutoCommit() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void commit() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		// nop
 	}
 
 	@Override
 	public void rollback() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void close() throws SQLException {
-		if (!isClosed()) {
-			bq = null;
-			isClosed = true;
-		}
+		isClosed = false;
 	}
 
 	@Override
@@ -182,271 +133,229 @@ public class BQConnection implements Connection {
 
 	@Override
 	public DatabaseMetaData getMetaData() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new BQDatabaseMetaData(bq);
 	}
 
 	@Override
 	public void setReadOnly(boolean readOnly) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean isReadOnly() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void setCatalog(String catalog) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public String getCatalog() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void setTransactionIsolation(int level) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		// nop
 	}
 
 	@Override
 	public int getTransactionIsolation() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public SQLWarning getWarnings() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void clearWarnings() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Statement createStatement(int resultSetType, int resultSetConcurrency)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public PreparedStatement prepareStatement(String sql, int resultSetType,
 			int resultSetConcurrency) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new BQPreparedStatement(bq, projectId, datasetId, sql);
 	}
 
 	@Override
 	public CallableStatement prepareCall(String sql, int resultSetType,
 			int resultSetConcurrency) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Map<String, Class<?>> getTypeMap() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void setTypeMap(Map<String, Class<?>> map) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void setHoldability(int holdability) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public int getHoldability() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Savepoint setSavepoint() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Savepoint setSavepoint(String name) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void rollback(Savepoint savepoint) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void releaseSavepoint(Savepoint savepoint) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Statement createStatement(int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability)
-			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+					throws SQLException {
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public PreparedStatement prepareStatement(String sql, int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability)
-			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+					throws SQLException {
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public CallableStatement prepareCall(String sql, int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability)
-			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+					throws SQLException {
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public PreparedStatement prepareStatement(String sql, int[] columnIndexes)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public PreparedStatement prepareStatement(String sql, String[] columnNames)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Clob createClob() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Blob createBlob() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public NClob createNClob() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public SQLXML createSQLXML() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean isValid(int timeout) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void setClientInfo(String name, String value)
 			throws SQLClientInfoException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLClientInfoException("Method not supported", null);
 	}
 
 	@Override
 	public void setClientInfo(Properties properties)
 			throws SQLClientInfoException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLClientInfoException("Method not supported", null);
 	}
 
 	@Override
 	public String getClientInfo(String name) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Properties getClientInfo() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Array createArrayOf(String typeName, Object[] elements)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Struct createStruct(String typeName, Object[] attributes)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void setSchema(String schema) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public String getSchema() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void abort(Executor executor) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void setNetworkTimeout(Executor executor, int milliseconds)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public int getNetworkTimeout() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 }

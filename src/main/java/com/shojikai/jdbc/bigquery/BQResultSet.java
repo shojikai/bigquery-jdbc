@@ -22,35 +22,42 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.api.services.bigquery.model.QueryResponse;
 import com.google.api.services.bigquery.model.TableCell;
 import com.google.api.services.bigquery.model.TableRow;
 
 public class BQResultSet implements ResultSet {
-	
+
+	private QueryResponse res;
 	private int size;
 	private int cursor;
 	private List<TableRow> rows;
 	private TableRow row;
 	private List<TableCell> cells;
-	
+	private boolean wasNull;
+
 	public BQResultSet(QueryResponse res) throws SQLException {
-		this.size = res.getRows().size();
-		this.cursor = 0;
-		this.rows = res.getRows();
+		this.res = res;
+		rows = res.getRows();
+		if (rows != null) {
+			size = rows.size();
+		} else {
+			size = 0;
+		}
+		cursor = 0;
 	}
 
 	@Override
 	public <T> T unwrap(Class<T> iface) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean isWrapperFor(Class<?> iface) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
@@ -66,1179 +73,1019 @@ public class BQResultSet implements ResultSet {
 
 	@Override
 	public void close() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		// nop
 	}
 
 	@Override
 	public boolean wasNull() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		return wasNull;
 	}
 
 	@Override
 	public String getString(int columnIndex) throws SQLException {
-		return cells.get(columnIndex - 1).getV().toString();
+		String value = cells.get(columnIndex - 1).getV().toString();
+		if (value == null) {
+			wasNull = true;
+		}
+		return value;
 	}
 
 	@Override
 	public boolean getBoolean(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public byte getByte(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public short getShort(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public int getInt(int columnIndex) throws SQLException {
-		return Integer.parseInt(cells.get(columnIndex - 1).getV().toString());
+		String value = getString(columnIndex);
+		return Integer.valueOf(value);
 	}
 
 	@Override
 	public long getLong(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		String value = getString(columnIndex);
+		if (value != null) {
+			return Long.parseLong(value);
+		} else {
+			return 0;
+		}
 	}
 
 	@Override
 	public float getFloat(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public double getDouble(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public BigDecimal getBigDecimal(int columnIndex, int scale)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public byte[] getBytes(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Date getDate(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Time getTime(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Timestamp getTimestamp(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		String value = getString(columnIndex);
+		if (value != null) {
+			Pattern pattern = Pattern.compile("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})");
+           	Matcher matcher = pattern.matcher(value);
+           	if (matcher.find()) {
+           		return Timestamp.valueOf(matcher.group(1));
+           	}
+		}
+		return new Timestamp(0);
 	}
 
 	@Override
 	public InputStream getAsciiStream(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public InputStream getUnicodeStream(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public InputStream getBinaryStream(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public String getString(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		int columnIndex = findColumn(columnLabel);
+		return getString(columnIndex);
 	}
 
 	@Override
 	public boolean getBoolean(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public byte getByte(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public short getShort(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public int getInt(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public long getLong(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		int columnIndex = findColumn(columnLabel);
+		return getLong(columnIndex);
 	}
 
 	@Override
 	public float getFloat(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public double getDouble(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public BigDecimal getBigDecimal(String columnLabel, int scale)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public byte[] getBytes(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Date getDate(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Time getTime(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Timestamp getTimestamp(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public InputStream getAsciiStream(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public InputStream getUnicodeStream(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public InputStream getBinaryStream(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public SQLWarning getWarnings() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void clearWarnings() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public String getCursorName() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return new BQResultSetMetaData(this.res);
 	}
 
 	@Override
 	public Object getObject(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Object getObject(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public int findColumn(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		int columnCount = getMetaData().getColumnCount();
+		for (int i = 1; i <= columnCount; i++) {
+			if (getMetaData().getCatalogName(i).equals(columnLabel)) {
+				return 1;
+			}
+		}
+		throw new SQLException("No such column: " + columnLabel);
 	}
 
 	@Override
 	public Reader getCharacterStream(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Reader getCharacterStream(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public BigDecimal getBigDecimal(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean isBeforeFirst() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean isAfterLast() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean isFirst() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean isLast() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void beforeFirst() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void afterLast() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean first() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean last() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public int getRow() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean absolute(int row) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean relative(int rows) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean previous() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void setFetchDirection(int direction) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public int getFetchDirection() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void setFetchSize(int rows) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public int getFetchSize() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public int getType() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public int getConcurrency() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean rowUpdated() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean rowInserted() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean rowDeleted() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateNull(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBoolean(int columnIndex, boolean x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateByte(int columnIndex, byte x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateShort(int columnIndex, short x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateInt(int columnIndex, int x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateLong(int columnIndex, long x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateFloat(int columnIndex, float x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateDouble(int columnIndex, double x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBigDecimal(int columnIndex, BigDecimal x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateString(int columnIndex, String x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBytes(int columnIndex, byte[] x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateDate(int columnIndex, Date x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateTime(int columnIndex, Time x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateTimestamp(int columnIndex, Timestamp x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateAsciiStream(int columnIndex, InputStream x, int length)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBinaryStream(int columnIndex, InputStream x, int length)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateCharacterStream(int columnIndex, Reader x, int length)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateObject(int columnIndex, Object x, int scaleOrLength)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateObject(int columnIndex, Object x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateNull(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBoolean(String columnLabel, boolean x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateByte(String columnLabel, byte x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateShort(String columnLabel, short x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateInt(String columnLabel, int x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateLong(String columnLabel, long x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateFloat(String columnLabel, float x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateDouble(String columnLabel, double x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBigDecimal(String columnLabel, BigDecimal x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateString(String columnLabel, String x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBytes(String columnLabel, byte[] x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateDate(String columnLabel, Date x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateTime(String columnLabel, Time x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateTimestamp(String columnLabel, Timestamp x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateAsciiStream(String columnLabel, InputStream x, int length)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBinaryStream(String columnLabel, InputStream x, int length)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateCharacterStream(String columnLabel, Reader reader,
 			int length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateObject(String columnLabel, Object x, int scaleOrLength)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateObject(String columnLabel, Object x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void insertRow() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateRow() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void deleteRow() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void refreshRow() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void cancelRowUpdates() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void moveToInsertRow() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void moveToCurrentRow() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Statement getStatement() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Object getObject(int columnIndex, Map<String, Class<?>> map)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Ref getRef(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Blob getBlob(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Clob getClob(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Array getArray(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Object getObject(String columnLabel, Map<String, Class<?>> map)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Ref getRef(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Blob getBlob(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Clob getClob(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Array getArray(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Date getDate(int columnIndex, Calendar cal) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Date getDate(String columnLabel, Calendar cal) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Time getTime(int columnIndex, Calendar cal) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Time getTime(String columnLabel, Calendar cal) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Timestamp getTimestamp(int columnIndex, Calendar cal)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Timestamp getTimestamp(String columnLabel, Calendar cal)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public URL getURL(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public URL getURL(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateRef(int columnIndex, Ref x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateRef(String columnLabel, Ref x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBlob(int columnIndex, Blob x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBlob(String columnLabel, Blob x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateClob(int columnIndex, Clob x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateClob(String columnLabel, Clob x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateArray(int columnIndex, Array x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateArray(String columnLabel, Array x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public RowId getRowId(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public RowId getRowId(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateRowId(int columnIndex, RowId x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateRowId(String columnLabel, RowId x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public int getHoldability() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean isClosed() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateNString(int columnIndex, String nString)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateNString(String columnLabel, String nString)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateNClob(int columnIndex, NClob nClob) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateNClob(String columnLabel, NClob nClob)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public NClob getNClob(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public NClob getNClob(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public SQLXML getSQLXML(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public SQLXML getSQLXML(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateSQLXML(int columnIndex, SQLXML xmlObject)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateSQLXML(String columnLabel, SQLXML xmlObject)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public String getNString(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public String getNString(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Reader getNCharacterStream(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public Reader getNCharacterStream(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateNCharacterStream(int columnIndex, Reader x, long length)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateNCharacterStream(String columnLabel, Reader reader,
 			long length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateAsciiStream(int columnIndex, InputStream x, long length)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBinaryStream(int columnIndex, InputStream x, long length)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateCharacterStream(int columnIndex, Reader x, long length)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateAsciiStream(String columnLabel, InputStream x, long length)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBinaryStream(String columnLabel, InputStream x,
 			long length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateCharacterStream(String columnLabel, Reader reader,
 			long length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBlob(int columnIndex, InputStream inputStream, long length)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBlob(String columnLabel, InputStream inputStream,
 			long length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateClob(int columnIndex, Reader reader, long length)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateClob(String columnLabel, Reader reader, long length)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateNClob(int columnIndex, Reader reader, long length)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateNClob(String columnLabel, Reader reader, long length)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateNCharacterStream(int columnIndex, Reader x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateNCharacterStream(String columnLabel, Reader reader)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateAsciiStream(int columnIndex, InputStream x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBinaryStream(int columnIndex, InputStream x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateCharacterStream(int columnIndex, Reader x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateAsciiStream(String columnLabel, InputStream x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBinaryStream(String columnLabel, InputStream x)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateCharacterStream(String columnLabel, Reader reader)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBlob(int columnIndex, InputStream inputStream)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateBlob(String columnLabel, InputStream inputStream)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateClob(int columnIndex, Reader reader) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateClob(String columnLabel, Reader reader)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateNClob(int columnIndex, Reader reader) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public void updateNClob(String columnLabel, Reader reader)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public <T> T getObject(String columnLabel, Class<T> type)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 }

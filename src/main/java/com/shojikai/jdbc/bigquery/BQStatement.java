@@ -7,290 +7,252 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 
+import com.google.api.services.bigquery.Bigquery;
 import com.google.api.services.bigquery.model.QueryRequest;
 import com.google.api.services.bigquery.model.QueryResponse;
 
 public class BQStatement implements Statement {
-	
-	private BQConnection con;
-	
-	public BQStatement(BQConnection con) throws SQLException {
-		this.con = con;
+
+	private Bigquery bq;
+	private String projectId;
+	private String datasetId;
+
+	public BQStatement(Bigquery bq, String projectId, String datasetId) throws SQLException {
+		this.bq = bq;
+		this.projectId = projectId;
+		this.datasetId = datasetId;
 	}
 
 	@Override
 	public <T> T unwrap(Class<T> iface) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public boolean isWrapperFor(Class<?> iface) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public ResultSet executeQuery(String sql) throws SQLException {
-		QueryRequest req = new QueryRequest();
-		req.setQuery(sql);
 		try {
-			QueryResponse res = con.getBq().jobs().query(con.getProjectId(), req).execute();
+			QueryRequest req = new QueryRequest();
+			req.setQuery(sql);
+			QueryResponse res = bq.jobs().query(projectId, req).execute();
 			return new BQResultSet(res);
 		} catch (IOException e) {
-			throw new BQSQLException("Something went wrong with the query: " + sql,e);
+			throw new SQLException("Something went wrong with the query: " + sql,e);
 		}
 	}
 
 	@Override
 	public int executeUpdate(String sql) throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public void close() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
 	public int getMaxFieldSize() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public void setMaxFieldSize(int max) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public int getMaxRows() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public void setMaxRows(int max) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public void setEscapeProcessing(boolean enable) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public int getQueryTimeout() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public void setQueryTimeout(int seconds) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public void cancel() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public SQLWarning getWarnings() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public void clearWarnings() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public void setCursorName(String name) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public boolean execute(String sql) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public ResultSet getResultSet() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public int getUpdateCount() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public boolean getMoreResults() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public void setFetchDirection(int direction) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public int getFetchDirection() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public void setFetchSize(int rows) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public int getFetchSize() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public int getResultSetConcurrency() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public int getResultSetType() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public void addBatch(String sql) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public void clearBatch() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public int[] executeBatch() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public Connection getConnection() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public boolean getMoreResults(int current) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public ResultSet getGeneratedKeys() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public int executeUpdate(String sql, int autoGeneratedKeys)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");      
 	}
 
 	@Override
 	public int executeUpdate(String sql, int[] columnIndexes)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");      
 	}
 
 	@Override
 	public int executeUpdate(String sql, String[] columnNames)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");      
 	}
 
 	@Override
 	public boolean execute(String sql, int autoGeneratedKeys)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");      
 	}
 
 	@Override
 	public boolean execute(String sql, int[] columnIndexes) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public boolean execute(String sql, String[] columnNames)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");      
 	}
 
 	@Override
 	public int getResultSetHoldability() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public boolean isClosed() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public void setPoolable(boolean poolable) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public boolean isPoolable() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public void closeOnCompletion() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		throw new SQLException("Method not supported");    
 	}
 
 	@Override
 	public boolean isCloseOnCompletion() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new SQLException("Method not supported");    
 	}
 
 }

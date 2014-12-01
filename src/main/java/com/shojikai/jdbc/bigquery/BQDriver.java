@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 
 public class BQDriver implements Driver {
 	
+	private static final boolean JDBC_COMPLIANT = false;
 	private static final String URL_PREFIX = "jdbc:bq:";
 	private static final int MAJOR_VERSION = 0;
 	private static final int MINOR_VERSION = 1;
@@ -26,11 +27,11 @@ public class BQDriver implements Driver {
 
 	@Override
 	public Connection connect(String url, Properties info) throws SQLException {
-		Connection con = null;
-		if (this.acceptsURL(url)) {
-			con = new BQConnection(url, info);
+		if (acceptsURL(url)) {
+			return new BQConnection(url, info);
+		} else {
+			return null;
 		}
-		return con;
 	}
 
 	@Override
@@ -39,10 +40,8 @@ public class BQDriver implements Driver {
 	}
 
 	@Override
-	public DriverPropertyInfo[] getPropertyInfo(String url, Properties info)
-			throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+	public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
+		throw new SQLException("Method not supported");
 	}
 
 	@Override
@@ -57,14 +56,12 @@ public class BQDriver implements Driver {
 
 	@Override
 	public boolean jdbcCompliant() {
-		// TODO Auto-generated method stub
-		return false;
+		return BQDriver.JDBC_COMPLIANT;
 	}
 
 	@Override
 	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new SQLFeatureNotSupportedException("Method not supported");
 	}
 
 }
