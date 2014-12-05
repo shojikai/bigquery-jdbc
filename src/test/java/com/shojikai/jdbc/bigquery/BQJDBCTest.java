@@ -11,7 +11,7 @@ import java.util.Properties;
 
 import org.junit.Test;
 
-public class BQDriverTest extends BQDriver {
+public class BQJDBCTest extends BQDriver {
 
 	@Test
 	public void test() {
@@ -19,6 +19,11 @@ public class BQDriverTest extends BQDriver {
 		String privateKeyFile = System.getenv("PRIVATE_KEY_FILE");
 		String projectId = System.getenv("PROJECT_ID");
 		String datasetId = System.getenv("DATASET_ID");
+		
+		if (clientEmail == null || privateKeyFile == null || projectId == null) {
+			fail("You must set the following environment variables: CLIENT_EMAIL, PRIVATE_KEY_FILE and PROJECT_ID");
+			return;
+		}
 
 		String url = "jdbc:bq:";
 		if (projectId != null) url = url + "//" + projectId;
@@ -38,11 +43,11 @@ public class BQDriverTest extends BQDriver {
 			String query = "SELECT TOP(title, 10) as title, COUNT(*) as revision_count FROM [publicdata:samples.wikipedia] WHERE wp_namespace = 0";
 			ResultSet rs = con.createStatement().executeQuery(query);
 			
+			int count = 0;
 			while (rs.next()) {
-				String title = rs.getString(1);
-				int count = rs.getInt(2);
-				System.out.println(title + " " + count);
+				count++;
 			}
+			assertThat(count, is(10));
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (SQLException e) {
